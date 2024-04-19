@@ -44,31 +44,17 @@ func readPDFFiles(filePath string) {
 		}
 		for _, text := range rows {
 			text = strings.ReplaceAll(text, " ", "") // Remove all spaces from the text
-			// fmt.Printf("Page %d Row: %s\n", i, text)
 			if strings.Contains(text, "Mathison") {
-				// fmt.Printf("Page %d Row: %s\n", i, text)
 				re := regexp.MustCompile(`TYPE:.{0,13}`)
 				text = re.ReplaceAllString(text, "")
-				// fmt.Printf("Page %d Row after stripping TYPE: %s\n", i, text)
 				payRegEx := regexp.MustCompile(`MathisonProjectMathisonProject(.{8})`)
 				payMatches := payRegEx.FindStringSubmatch(text)
 				var pay string
 				if len(payMatches) > 1 {
 					pay = payMatches[1]
 					pay = "$" + pay
-					// fmt.Printf("Pay: %s\n", pay)
 				}
 				date := text[:5]
-				// fmt.Printf("Date: %s\n", date)
-				depositorRegEx := regexp.MustCompile(`MathisonProject`)
-				matches := depositorRegEx.FindStringSubmatch(text)
-				var depositor string
-				if len(matches) > 0 {
-					depositor = matches[0]
-					depositor = strings.Replace(depositor, "MathisonProject", "Mathison Projects", -1)
-					// fmt.Println("Depositor: ", text)
-				}
-				// fmt.Println(date, pay, depositor)
 				pdfg := gofpdf.New("P", "mm", "A4", "") // Create a new PDF. The "P" argument stands for Portrait mode.
 				pdfg.AddPage()
 				pdfg.SetFont("Arial", "", 12) // SetFont now takes a style parameter, which can be left empty for normal text.
@@ -80,17 +66,21 @@ func readPDFFiles(filePath string) {
 				pdfg.Text(10, 20, "Dover, DE 19901")
 				pdfg.Text(10, 25, "United States")
 				pdfg.Text(10, 30, "jacob@mathisonprojects.com")
-				pdfg.Ln(35) // Move below the text before starting the table
+				pdfg.SetDrawColor(0, 0, 0) // Set the color for the divider line to black
+				pdfg.Line(10, 35, 200, 35) // Draw a line from x1,y1 to x2,y2 as the divider
+				pdfg.Text(10, 40, "Employee: Hunter Koenig-Albert")
+				pdfg.Text(10, 45, "Employee ID: HKA-2000")
+				pdfg.Ln(60) // Move below the text before starting the table
 
 				// gofpdf does not have a direct AddTable function, but you can create tables using CellFormat in a loop for rows and columns
-				header := []string{"Employee #", "Pay Date", "Pay", "Depositor"}
-				w := []float64{40.0, 35.0, 45.0, 45.0} // Column widths adjusted to match the number of headers
+				header := []string{"Employee #", "Pay Date", "Pay"}
+				w := []float64{40.0, 35.0, 45.0, 45.0}
 				for j, str := range header {
 					pdfg.CellFormat(w[j], 7, str, "1", 0, "C", false, 0, "")
 				}
 				pdfg.Ln(-1) // Move to the next line
 				data := [][]string{
-					{"HKA-2000", date + "/" + year, pay, depositor},
+					{"HKA-2000", date + "/" + year, pay},
 				}
 				for _, row := range data {
 					for j, datum := range row {
@@ -104,7 +94,7 @@ func readPDFFiles(filePath string) {
 				// Finally, save the PDF
 				docDate := date
 				docDate = strings.Replace(docDate, "/", "-", -1)
-				fileName := fmt.Sprintf("Mathison_Projects_Inc_Report_%s_%s.pdf", docDate, year)
+				fileName := fmt.Sprintf("Hunter_Koenig-Albert_Paystub_%s_%s.pdf", docDate, year)
 				err := pdfg.OutputFileAndClose(fileName)
 				if err != nil {
 					log.Fatalf("failed to save PDF: %v", err)
@@ -116,7 +106,6 @@ func readPDFFiles(filePath string) {
 }
 
 func main() {
-	// fmt.Println("Hello, World!")
 	filePaths := []string{
 		"C:/Users/Doge2/Downloads/Hunter Koenig-Albert Bank Statement 09-30-23.pdf",
 		"C:/Users/Doge2/Downloads/Hunter Koenig-Albert Bank Statement 10-31-23.pdf",
@@ -125,37 +114,7 @@ func main() {
 		"C:/Users/Doge2/Downloads/Hunter Koenig-Albert Bank Statement 01-31-24.pdf",
 		"C:/Users/Doge2/Downloads/Hunter Koenig-Albert Bank Statement 02-29-24.pdf",
 	}
-	// filePath := "C:/Users/Doge2/Downloads/Hunter Koenig-Albert Bank Statement 01-31-24.pdf" // Replace YourUsername and yourfile.pdf with actual values
 	for _, filePath := range filePaths {
 		readPDFFiles(filePath)
 	}
 }
-
-// cleanText := text
-// unwantedStrings := []string{
-// 	"Withdrawal",
-// 	"AchPlanetFitTYPE:CLUBFEESCO:PLANETFIT",
-// 	"RecurringWithdrawalDebitCardSignatureDebitMerch.Post",
-// 	"MIDJOURNEYINC.HTTPSWWW.MIDJCAref",
-// 	"RecurringDebitCardSIgnatureDebitMerch",
-// 	".Post",
-// 	"AchPaypalTYPE:INSTXFERCO:PAYPALNAME:HUNTERALBERT",
-// 	"TransferToShare0001",
-// 	"OnlineBanking",
-// 	"Taxsavings",
-// 	"TransferToLoan##########070712",
-// 	"RecurringDebitCardSignatureDebitMerch",
-// 	"Revolut",
-// 	"DebitCardSignatureDebitMerch",
-// 	"DebitCardFeeVISAINTERNATIONALSERVICEASSESSMENT",
-// }
-// for _, str := range unwantedStrings {
-// 	re := regexp.MustCompile(regexp.QuoteMeta(str))
-// 	cleanText = re.ReplaceAllString(cleanText, "")
-// }
-// text = cleanText
-// re := regexp.MustCompile(`DepositAchMathisonProjectTYPE:(.*):MathisonProject1,(.{0,22})`)
-// matches := re.FindStringSubmatch(text)
-// if len(matches) > 0 {
-// 	fmt.Println("Test")
-// }
